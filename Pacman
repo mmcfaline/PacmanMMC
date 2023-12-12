@@ -1,0 +1,91 @@
+import os
+import random
+import msvcrt
+
+# Constants
+EMPTY = 0
+PACMAN = 1
+GHOST = 2
+DOT = 3
+
+# Map dimensions
+WIDTH = 10
+HEIGHT = 10
+
+# Characters for display
+CHARACTERS = {
+    EMPTY: ' ',
+    PACMAN: 'P',
+    GHOST: 'G',
+    DOT: '.',
+}
+
+# Initial positions
+pacman_position = [1, 1]
+ghost_position = [WIDTH - 2, HEIGHT - 2]
+
+# Initialize the map
+game_map = [[EMPTY] * WIDTH for _ in range(HEIGHT)]
+game_map[pacman_position[1]][pacman_position[0]] = PACMAN
+game_map[ghost_position[1]][ghost_position[0]] = GHOST
+
+# Place some dots randomly on the map
+num_dots = 5
+for _ in range(num_dots):
+    dot_position = [random.randint(0, WIDTH - 1), random.randint(0, HEIGHT - 1)]
+    while game_map[dot_position[1]][dot_position[0]] != EMPTY:
+        dot_position = [random.randint(0, WIDTH - 1), random.randint(0, HEIGHT - 1)]
+    game_map[dot_position[1]][dot_position[0]] = DOT
+
+def display_map():
+    os.system('cls' if os.name == 'nt' else 'clear')  # Clear the console
+    for row in game_map:
+        print(' '.join([CHARACTERS[cell] for cell in row]))
+    print()
+
+def move(direction):
+    if direction == 'w' and pacman_position[1] > 0:
+        pacman_position[1] -= 1
+    elif direction == 's' and pacman_position[1] < HEIGHT - 1:
+        pacman_position[1] += 1
+    elif direction == 'a' and pacman_position[0] > 0:
+        pacman_position[0] -= 1
+    elif direction == 'd' and pacman_position[0] < WIDTH - 1:
+        pacman_position[0] += 1
+
+# Main game loop
+while True:
+    display_map()
+
+    direction = msvcrt.getch().decode('utf-8').lower()
+
+    if direction in ['w', 'a', 's', 'd']:
+        game_map[pacman_position[1]][pacman_position[0]] = EMPTY
+        move(direction)
+
+    # Check for collisions
+    if pacman_position == ghost_position:
+        print("Game Over! You were caught by the ghost.")
+        break
+
+    # Check for collecting dots
+    if game_map[pacman_position[1]][pacman_position[0]] == DOT:
+        print("Dot collected!")
+        game_map[pacman_position[1]][pacman_position[0]] = EMPTY
+
+    # Move the ghost randomly
+    possible_moves = []
+    if ghost_position[1] > 0:
+        possible_moves.append([0, -1])
+    if ghost_position[1] < HEIGHT - 1:
+        possible_moves.append([0, 1])
+    if ghost_position[0] > 0:
+        possible_moves.append([-1, 0])
+    if ghost_position[0] < WIDTH - 1:
+        possible_moves.append([1, 0])
+
+    move_choice = random.choice(possible_moves)
+    game_map[ghost_position[1]][ghost_position[0]] = EMPTY
+    ghost_position[0] += move_choice[0]
+    ghost_position[1] += move_choice[1]
+    game_map[ghost_position[1]][ghost_position[0]] = GHOST
